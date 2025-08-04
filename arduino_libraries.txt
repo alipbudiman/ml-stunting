@@ -1,0 +1,35 @@
+Arduino Libraries Required for IOT.cpp:
+
+1. WiFiNINA - by Arduino
+   - For WiFi connectivity on Arduino Nano 33 IoT
+   - Install via Arduino IDE Library Manager
+
+2. ArduinoHttpClient - by Arduino
+   - For HTTP requests to the backend API
+   - Install via Arduino IDE Library Manager
+
+3. ArduinoJson - by Benoit Blanchon
+   - For JSON serialization/deserialization
+   - Install via Arduino IDE Library Manager
+
+4. ArduinoBLE - by Arduino
+   - For Bluetooth Low Energy communication
+   - Install via Arduino IDE Library Manager
+
+5. LiquidCrystal I2C - by Frank de Brabander
+   - For I2C LCD display control
+   - Install via Arduino IDE Library Manager
+
+Installation Steps:
+1. Open Arduino IDE
+2. Go to Tools > Manage Libraries
+3. Search for each library name above
+4. Click Install for each library
+5. Restart Arduino IDE if needed
+
+Hardware Requirements:
+- Arduino Nano 33 IoT (or compatible WiFi-enabled Arduino)
+- I2C LCD Display (12x2 or 16x2)
+- HC-SR04 Ultrasonic Sensor
+- BLE Weight Scale
+- LED Matrix (Arduino UNO R4 WiFi built-in)

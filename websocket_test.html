@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IoT Device Monitor - WebSocket Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 200px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="text"].wide {
+            width: 300px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.connected {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .data-display {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .data-item {
+            margin: 5px 0;
+            font-family: monospace;
+        }
+        .logs {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .reset-section {
+            border-top: 2px solid #007bff;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏥 ML Stunting - IoT Device Monitor</h1>
+    
+    <div class="container">
+        <h2>📡 WebSocket Connection</h2>
+        
+        <div class="input-group">
+            <label for="serverUrl">Server URL:</label>
+            <input type="text" id="serverUrl" placeholder="Server URL" value="localhost:5000" class="wide">
+        </div>
+        
+        <div class="input-group">
+            <label for="deviceId">Device ID:</label>
+            <input type="text" id="deviceId" placeholder="Enter Device ID (e.g., IOT_001)" value="IOT_001">
+        </div>
+        
+        <button onclick="connectToDevice()" id="connectBtn">Connect</button>
+        <button onclick="disconnectFromDevice()" id="disconnectBtn" disabled>Disconnect</button>
+        
+        <div id="connectionStatus" class="status disconnected">
+            Status: Disconnected
+        </div>
+        
+        <div class="data-display">
+            <h3>📊 Real-time Data</h3>
+            <div class="data-item">Device ID: <span id="displayDeviceId">-</span></div>
+            <div class="data-item">Height (TB): <span id="displayHeight">-</span> cm</div>
+            <div class="data-item">Weight (BB): <span id="displayWeight">-</span> kg</div>
+            <div class="data-item">Status: <span id="displayStatus">-</span></div>
+            <div class="data-item">Last Updated: <span id="displayTimestamp">-</span></div>
+        </div>
+    </div>
+    
+    <div class="container reset-section">
+        <h2>🔄 Device Reset</h2>
+        <p>Reset device data before starting new measurement</p>
+        <button onclick="resetDevice()">Reset Device Data</button>
+    </div>
+    
+    <div class="container">
+        <h2>📡 Send Test Data</h2>
+        <p>Simulate IoT device sending data</p>
+        
+        <div class="input-group">
+            <label for="testHeight">Height (cm):</label>
+            <input type="text" id="testHeight" placeholder="120.5" value="120.5">
+        </div>
+        
+        <div class="input-group">
+            <label for="testWeight">Weight (kg):</label>
+            <input type="text" id="testWeight" placeholder="25.3" value="25.3">
+        </div>
+        
+        <button onclick="sendTestData()">Send Test Data</button>
+    </div>
+    
+    <div class="container">
+        <h2>📋 Connection Logs</h2>
+        <div id="logs" class="logs"></div>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <script>
+        let websocket = null;
+        let isConnected = false;
+        
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logs.innerHTML += `[${timestamp}] ${message}\n`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+        
+        function updateStatus(connected) {
+            isConnected = connected;
+            const statusDiv = document.getElementById('connectionStatus');
+            const connectBtn = document.getElementById('connectBtn');
+            const disconnectBtn = document.getElementById('disconnectBtn');
+            
+            if (connected) {
+                statusDiv.textContent = 'Status: Connected';
+                statusDiv.className = 'status connected';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+            } else {
+                statusDiv.textContent = 'Status: Disconnected';
+                statusDiv.className = 'status disconnected';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+        
+        function updateDisplay(data) {
+            document.getElementById('displayDeviceId').textContent = data.did || '-';
+            document.getElementById('displayHeight').textContent = data.tb || '-';
+            document.getElementById('displayWeight').textContent = data.bb || '-';
+            document.getElementById('displayStatus').textContent = data.status || '-';
+            
+            if (data.timestamp) {
+                const date = new Date(data.timestamp * 1000);
+                document.getElementById('displayTimestamp').textContent = date.toLocaleString();
+            } else {
+                document.getElementById('displayTimestamp').textContent = '-';
+            }
+        }
+        
+        function connectToDevice() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const deviceId = document.getElementById('deviceId').value.trim();
+            
+            if (!serverUrl) {
+                alert('Please enter a Server URL');
+                return;
+            }
+            
+            if (!deviceId) {
+                alert('Please enter a Device ID');
+                return;
+            }
+            
+            if (websocket) {
+                websocket.close();
+            }
+            
+            const wsProtocol = serverUrl.startsWith('https') ? 'wss' : 'ws';
+            const cleanUrl = serverUrl.replace(/^https?:\/\//, '');
+            const wsUrl = `${wsProtocol}://${cleanUrl}/ws/data/${deviceId}`;
+            log(`Connecting to: ${wsUrl}`);
+            
+            websocket = new WebSocket(wsUrl);
+            
+            websocket.onopen = function(event) {
+                log(`✅ Connected to device: ${deviceId}`);
+                updateStatus(true);
+            };
+            
+            websocket.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    log(`📊 Received data: ${JSON.stringify(data)}`);
+                    updateDisplay(data);
+                } catch (e) {
+                    log(`❌ Error parsing data: ${e.message}`);
+                }
+            };
+            
+            websocket.onclose = function(event) {
+                log(`🔌 Connection closed for device: ${deviceId} (Code: ${event.code}, Reason: ${event.reason})`);
+                updateStatus(false);
+                websocket = null;
+            };
+            
+            websocket.onerror = function(error) {
+                log(`❌ WebSocket error: ${error}`);
+                log(`❌ Check if server is running on: ${serverUrl}`);
+                updateStatus(false);
+            };
+        }
+        
+        function disconnectFromDevice() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+            updateStatus(false);
+            log('🔌 Manually disconnected');
+        }
+        
+        async function resetDevice() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const deviceId = document.getElementById('deviceId').value.trim();
+            
+            if (!serverUrl) {
+                alert('Please enter a Server URL');
+                return;
+            }
+            
+            if (!deviceId) {
+                alert('Please enter a Device ID');
+                return;
+            }
+            
+            try {
+                log(`🔄 Resetting device: ${deviceId}`);
+                const httpProtocol = serverUrl.startsWith('localhost') || serverUrl.startsWith('127.0.0.1') ? 'http' : 'https';
+                const cleanUrl = serverUrl.replace(/^https?:\/\//, '');
+                const apiUrl = `${httpProtocol}://${cleanUrl}/reset/${deviceId}`;
+                
+                log(`Making request to: ${apiUrl}`);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Reset successful: ${result.message}`);
+                } else {
+                    log(`❌ Reset failed (${response.status}): ${result.message}`);
+                }
+            } catch (error) {
+                log(`❌ Reset error: ${error.message}`);
+                log(`❌ Make sure server is running and CORS is enabled`);
+            }
+        }
+        
+        async function sendTestData() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const deviceId = document.getElementById('deviceId').value.trim();
+            const height = parseFloat(document.getElementById('testHeight').value);
+            const weight = parseFloat(document.getElementById('testWeight').value);
+            
+            if (!serverUrl) {
+                alert('Please enter a Server URL');
+                return;
+            }
+            
+            if (!deviceId) {
+                alert('Please enter a Device ID');
+                return;
+            }
+            
+            if (isNaN(height) || isNaN(weight)) {
+                alert('Please enter valid height and weight values');
+                return;
+            }
+            
+            try {
+                log(`📡 Sending test data for device: ${deviceId}`);
+                const httpProtocol = serverUrl.startsWith('localhost') || serverUrl.startsWith('127.0.0.1') ? 'http' : 'https';
+                const cleanUrl = serverUrl.replace(/^https?:\/\//, '');
+                const apiUrl = `${httpProtocol}://${cleanUrl}/recive`;
+                
+                log(`Making request to: ${apiUrl}`);
+                
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        did: deviceId,
+                        tb: height,
+                        bb: weight
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ Data sent successfully: ${result.message}`);
+                } else {
+                    log(`❌ Failed to send data (${response.status}): ${result.message || result.detail}`);
+                }
+            } catch (error) {
+                log(`❌ Send data error: ${error.message}`);
+                log(`❌ Make sure server is running and CORS is enabled`);
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+        
+        // Initialize
+        updateStatus(false);
+        log('🚀 IoT Device Monitor initialized');
+    </script>
+</body>
+</html>
