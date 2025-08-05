@@ -1,4 +1,5 @@
 from fastapi import WebSocket
+from fastapi.websockets import WebSocketState
 from typing import List, Dict
 import json
 
@@ -33,9 +34,13 @@ class ConnectionManager:
 
     async def send_personal_message(self, message: dict, websocket: WebSocket):
         try:
-            await websocket.send_text(json.dumps(message))
+            # Check if websocket is still open before sending
+            if websocket.client_state == WebSocketState.CONNECTED:
+                await websocket.send_text(json.dumps(message))
         except Exception as e:
             print(f"Error sending personal message: {e}")
+            # Auto-disconnect if websocket is closed
+            self.disconnect(websocket)
 
     async def broadcast_to_device(self, device_id: str, message: dict):
         """Broadcast message to all clients connected to specific device"""
@@ -43,7 +48,11 @@ class ConnectionManager:
             disconnected = []
             for websocket in self.active_connections[device_id]:
                 try:
-                    await websocket.send_text(json.dumps(message))
+                    # Check if websocket is still connected before sending
+                    if websocket.client_state == WebSocketState.CONNECTED:
+                        await websocket.send_text(json.dumps(message))
+                    else:
+                        disconnected.append(websocket)
                 except Exception as e:
                     print(f"Error broadcasting to device {device_id}: {e}")
                     disconnected.append(websocket)

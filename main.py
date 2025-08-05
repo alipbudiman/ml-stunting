@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.websockets import WebSocketState
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
@@ -270,6 +271,11 @@ async def websocket_data(websocket: WebSocket, device_id: str):
     await manager.connect(websocket, device_id)
     try:
         while True:
+            
+            # Check if websocket is still connected
+            if websocket.client_state != WebSocketState.CONNECTED:
+                break
+                
             # Send current device data if exists
             if device_id in data_devices:
                 device_data = data_devices[device_id]
@@ -296,9 +302,9 @@ async def websocket_data(websocket: WebSocket, device_id: str):
             
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-        print(f"Client disconnected from device {device_id}")
+        logger.info(f"Client disconnected from device {device_id}")
     except Exception as e:
-        print(f"WebSocket error for device {device_id}: {e}")
+        logger.error(f"WebSocket error for device {device_id}: {e}")
         manager.disconnect(websocket)
 
 # Run the app
