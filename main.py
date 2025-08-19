@@ -76,6 +76,24 @@ async def reset_data(did: str):
             message="Device not found"
         )
 
+# trigger IOT for start collecting data
+@app.post("/trigger/{did}", response_model=ResponseMessage)
+async def trigger_iot(did: str):
+    """
+    Trigger IOT device to start collecting data
+    """
+    if did in data_devices:
+        data_devices[did]["triggered"] = True
+        return ResponseMessage(
+            status=200,
+            message=f"Device {did} triggered to start collecting data"
+        )
+    else:
+        return ResponseMessage(
+            status=404,
+            message=f"Device {did} not found"
+        )
+
 # Data Received from IOT device
 # receiving tb and bb data from IOT device
 @app.post(
@@ -112,7 +130,8 @@ async def recive_form_device(data: DataFromIOT):
         "tb": data.tb,
         "bb": data.bb,
         "status": "updated",
-        "last_updated": asyncio.get_event_loop().time()
+        "last_updated": asyncio.get_event_loop().time(),
+        "triggered": False  # Set to False initially, can be updated later
     }
     
     # Broadcast updated data to clients connected to this specific device
@@ -204,9 +223,16 @@ async def predict_stunting(request: DataAnakInput):
         # Perform prediction
         result = prediction.predict(data_anak)
         logger.info(f"Prediction result: {result}")
+        
+        msg = prediction.penangana_gejalan(
+            result.bbu,
+            result.tbu,
+            result.bbtb
+        )
+        
         return PredictionOutputWithMessage(
             data=result,
-            message="Prediction successful"
+            message=msg
         )
          
     except Exception as e:
@@ -311,6 +337,10 @@ async def websocket_data(websocket: WebSocket, device_id: str):
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
+        host="0.0.0.0",  # Allow access from all network interfaces
         port=5000,
-        reload=False
+        reload=False,
+        workers=1,  # Number of worker processes
+        access_log=True,  # Enable access logging
+        log_level="info"  # Set log level
     )

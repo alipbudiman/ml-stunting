@@ -7,9 +7,9 @@
 #include <ArduinoJson.h>
 
 // === KONFIGURASI WIFI & SERVER ===
-const char* ssid = "YOUR_WIFI_SSID";        // Ganti dengan SSID WiFi Anda
-const char* password = "YOUR_WIFI_PASSWORD"; // Ganti dengan password WiFi Anda
-const char* serverAddress = "192.168.1.100"; // Ganti dengan IP server Anda
+const char* ssid = "JERRY.NET";        // Ganti dengan SSID WiFi Anda
+const char* password = "123456jerry"; // Ganti dengan password WiFi Anda
+const char* serverAddress = "4.145.112.100"; // Ganti dengan IP server Anda
 const int serverPort = 5000;
 
 WiFiClient wifiClient;
