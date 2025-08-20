@@ -129,11 +129,11 @@ class Prediction:
         # Gabungkan rekomendasi
         rekomendasi = []
         if bbu_key in bbu_map:
-            rekomendasi.append(f"BB/U: {bbu_map[bbu_key]}")
+            rekomendasi.append(f"\nBB/U: {bbu_map[bbu_key]}")
         if tbu_key in tbu_map:
-            rekomendasi.append(f"TB/U: {tbu_map[tbu_key]}")
+            rekomendasi.append(f"\nTB/U: {tbu_map[tbu_key]}")
         if bbtb_key in bbtb_map:
-            rekomendasi.append(f"BB/TB: {bbtb_map[bbtb_key]}")
+            rekomendasi.append(f"\nBB/TB: {bbtb_map[bbtb_key]}")
 
         if not rekomendasi:
             return "Tidak ada rekomendasi penanganan."
