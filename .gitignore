@@ -1,4 +1,5 @@
-/mlstunting
+mlstunting/
+stuntingproj/
 
 # seluruh .pyc
 *.pyc

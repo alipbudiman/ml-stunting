@@ -94,7 +94,7 @@ class Prediction:
             print(f"❌ Error during prediction: {e}")
             raise
     
-    def penangana_gejalan(bbu: str, tbu: str, bbtb: str):
+    def penangana_gejalan(self, bbu: str, tbu: str, bbtb: str):
         """
         Menentukan penanganan berdasarkan hasil prediksi
         Gabungkan rekomendasi dari tabel CSV sesuai status input
