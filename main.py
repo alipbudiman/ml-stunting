@@ -40,7 +40,9 @@ calculator = ZScoreCalculator()
 
 
 manager = ConnectionManager()
-    
+
+# TODO
+# should store in databases
 data_devices = {}
 device_register = ['IOT_001']
 
