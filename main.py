@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from time import time
+import time
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 from fastapi.middleware.cors import CORSMiddleware
