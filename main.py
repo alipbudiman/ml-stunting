@@ -284,6 +284,9 @@ async def get_all_devices():
 async def get_device_data(device_id: str):
     """Get specific device data"""
     device_data = data_devices.get(device_id)
+    # log
+    logger.info(f"Fetching data for device {device_id}")
+    logger.info(f"Device data: {device_data}")
     if device_data and device_id in device_register:
         return {
             "device_id": device_id,
