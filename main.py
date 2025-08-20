@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from time import time
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.websockets import WebSocketState
 from fastapi.middleware.cors import CORSMiddleware
@@ -283,14 +284,10 @@ async def get_all_devices():
 @app.get("/devices/{device_id}")
 async def get_device_data(device_id: str):
     """Get specific device data"""
-    device_data = data_devices.get(device_id)
-    # log
-    logger.info(f"Fetching data for device {device_id}")
-    logger.info(f"Device data: {device_data}")
-    if device_data and device_id in device_register:
+    if device_id and device_id in device_register:
         return {
             "device_id": device_id,
-            "data": device_data,
+            "data": f"connect to server at {time.strftime('%Y-%m-%d %H:%M:%S')}",
             "connections": len(manager.active_connections.get(device_id, [])) if hasattr(manager.active_connections, 'get') else 0
         }
     else:
