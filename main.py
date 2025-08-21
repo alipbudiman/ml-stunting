@@ -284,7 +284,7 @@ async def get_all_devices():
 async def get_device_data(device_id: str):
     """Get specific device data"""
     device_data = data_devices.get(device_id)
-    if device_data and device_id in device_register:
+    if device_id and device_id in device_register:
         return {
             "device_id": device_id,
             "data": device_data,
