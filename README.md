@@ -1,6 +1,6 @@
 # ML Stunting FastAPI Template
 ---
-Note: maaf berantakan, kalo sempan nanti di rapihkan
+Note: maaf berantakan, kalo sempat nanti di rapihkan
 
 
 Simple and clean FastAPI template for ML Stunting prediction service.
